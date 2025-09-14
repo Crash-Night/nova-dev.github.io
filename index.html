@@ -1,10 +1,3 @@
-<?php
-session_start();
-// Crear un token válido
-$_SESSION['img_token'] = bin2hex(random_bytes(16));
-$_SESSION['img_token_time'] = time();
-$token = $_SESSION['img_token'];
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
