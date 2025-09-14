@@ -1,0 +1,166 @@
+<?php
+session_start();
+
+// Crear token si no existe
+if (!isset($_SESSION['img_token'])) {
+    $_SESSION['img_token'] = bin2hex(random_bytes(16));
+}
+$token = $_SESSION['img_token'];
+
+// Configuración
+$log_file = 'contacto_log.txt';
+$max_messages = 200; // límite de mensajes
+$max_lengths = [
+    'nombre' => 50,
+    'email' => 100,
+    'asunto' => 100,
+    'mensaje' => 500
+];
+$message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['img_token']) {
+        $message = "Token inválido o ya usado. Intenta nuevamente.";
+    } else {
+        $num_messages = file_exists($log_file) ? count(file($log_file)) : 0;
+        if ($num_messages >= $max_messages) {
+            $message = "Nuestro sistema está saturado debido a la alta demanda de mensajes de contacto. Intenta contactarme a través de mis redes sociales como X o Discord.";
+        } else {
+            // Sanitizar y limitar entradas
+            $nombre = substr(trim($_POST['nombre']), 0, $max_lengths['nombre']);
+            $email = substr(trim($_POST['email']), 0, $max_lengths['email']);
+            $asunto = substr(trim($_POST['asunto']), 0, $max_lengths['asunto']);
+            $mensaje_texto = substr(trim($_POST['mensaje']), 0, $max_lengths['mensaje']);
+
+            $nombre = htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8');
+            $email = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+            $asunto = htmlspecialchars($asunto, ENT_QUOTES, 'UTF-8');
+            $mensaje_texto = htmlspecialchars($mensaje_texto, ENT_QUOTES, 'UTF-8');
+
+            $entrada = "[" . date("Y-m-d H:i:s") . "] $nombre <$email> - $asunto: $mensaje_texto\n";
+
+            file_put_contents($log_file, $entrada, FILE_APPEND | LOCK_EX);
+
+            $message = "Tu mensaje ha sido enviado con éxito.";
+
+            unset($_SESSION['img_token']); // invalidar token
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contacto - NovaDev</title>
+  <link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+  <!-- Navegación -->
+  <nav>
+    <div class="row center">
+      <svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+        <path class="cls-1" d="M513,607.98s-53.22,133.35-367.22,183.02c314,49.67,367.22,183.02,367.22,183.02,0,0,53.22-133.35,367.22-183.02-314-49.67-367.22-183.02-367.22-183.02Z" />
+        <path class="cls-1" d="M512.66,264.71c-117.66,343.29-425.39,457.29-425.39,457.29v-455.33S512.82,20.98,512.82,20.98l424.18,245.69v455.33s-307-114-424.34-457.29" />
+      </svg>
+      <a href="index.php"><h5>NovaDev</h5></a>
+    </div>
+	
+    <div class="row muted no-mobile">
+      <a href="index.php">Pagina Principal</a>
+      <a href="contacto.php">Contacto</a>
+    </div>
+	
+    <div class="row no-mobile">
+      <a href="https://github.com/Crash-Night"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM252.8 8c-138.7 0-244.8 105.3-244.8 244 0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1 100-33.2 167.8-128.1 167.8-239 0-138.7-112.5-244-251.2-244z"/></svg></a>
+	  <a href="https://x.com/__Crash_Night__"><svg xmlns="http://www.w3.org/2000/svg" fill="#000000" class="bi bi-twitter-x" viewBox="0 0 16 16" id="Twitter-X--Streamline-Bootstrap" height="16" width="16"><path d="M12.6 0.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867 -5.07 -4.425 5.07H0.316l5.733 -6.57L0 0.75h5.063l3.495 4.633L12.601 0.75Zm-0.86 13.028h1.36L4.323 2.145H2.865z" stroke-width="1"></path></svg></a>
+	  <a href="https://discord.gg/BZUe8QyYQ9"><svg viewBox="0 -28.5 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z M85.4738752,135.09489 C72.8290281,135.09489 62.4592217,123.290155 62.4592217,108.914901 C62.4592217,94.5396472 72.607595,82.7145587 85.4738752,82.7145587 C98.3405064,82.7145587 108.709962,94.5189427 108.488529,108.914901 C108.508531,123.290155 98.3405064,135.09489 85.4738752,135.09489 Z M170.525237,135.09489 C157.88039,135.09489 147.510584,123.290155 147.510584,108.914901 C147.510584,94.5396472 157.658606,82.7145587 170.525237,82.7145587 C183.391518,82.7145587 193.761324,94.5189427 193.539891,108.914901 C193.539891,123.290155 183.391518,135.09489 170.525237,135.09489 Z" fill="#ffffff" fill-rule="nonzero"> </path> </g> </g></svg></a>
+    </div>
+  </nav>
+
+  <div class="banner">
+    <img id="protected-img" src="img.php?mode=public" alt="Protected" class="protected-img" oncontextmenu="return false;">
+	
+    <div class="overlay center">
+      <h3 id="counter">~ Contacto ~</h3>
+    </div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="container column secondary center">
+    <p class="muted1">Rellena tus datos y envíanos un mensaje. Te respondere lo antes posible.</p>
+	
+	<br />
+    <div class="row no-mobile">
+      <a href="https://github.com/Crash-Night"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM252.8 8c-138.7 0-244.8 105.3-244.8 244 0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1 100-33.2 167.8-128.1 167.8-239 0-138.7-112.5-244-251.2-244z"/></svg></a>
+	  <a href="https://x.com/__Crash_Night__"><svg xmlns="http://www.w3.org/2000/svg" fill="#000000" class="bi bi-twitter-x" viewBox="0 0 16 16" id="Twitter-X--Streamline-Bootstrap" height="16" width="16"><path d="M12.6 0.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867 -5.07 -4.425 5.07H0.316l5.733 -6.57L0 0.75h5.063l3.495 4.633L12.601 0.75Zm-0.86 13.028h1.36L4.323 2.145H2.865z" stroke-width="1"></path></svg></a>
+	  <a href="https://x.com/"><svg viewBox="0 -28.5 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z M85.4738752,135.09489 C72.8290281,135.09489 62.4592217,123.290155 62.4592217,108.914901 C62.4592217,94.5396472 72.607595,82.7145587 85.4738752,82.7145587 C98.3405064,82.7145587 108.709962,94.5189427 108.488529,108.914901 C108.508531,123.290155 98.3405064,135.09489 85.4738752,135.09489 Z M170.525237,135.09489 C157.88039,135.09489 147.510584,123.290155 147.510584,108.914901 C147.510584,94.5396472 157.658606,82.7145587 170.525237,82.7145587 C183.391518,82.7145587 193.761324,94.5189427 193.539891,108.914901 C193.539891,123.290155 183.391518,135.09489 170.525237,135.09489 Z" fill="#ffffff" fill-rule="nonzero"> </path> </g> </g></svg></a>
+    </div>
+	
+    <?php if (!empty($message)): ?>
+        <p class="info"><?php echo $message; ?></p>
+    <?php endif; ?>
+
+    <form action="contacto.php" method="POST" class="column1">
+        <input type="hidden" name="token" value="<?php echo $token; ?>">
+
+			<div class="input-row">
+				<p class="label-center">Nombre</p>
+				<div class="counter" id="nombre-count"><?php echo $max_lengths['nombre']; ?> caracteres restantes</div>
+			</div>
+			<input type="text" name="nombre" placeholder="Tu nombre" maxlength="<?php echo $max_lengths['nombre']; ?>" required>
+
+			<div class="input-row">
+				<p class="label-center">Correo Electronico</p>
+				<div class="counter" id="email-count"><?php echo $max_lengths['email']; ?> caracteres restantes</div>
+			</div>
+			<input type="text" name="email" placeholder="Tu email" maxlength="<?php echo $max_lengths['email']; ?>" required>
+
+			<div class="input-row">
+				<p class="label-center">Asunto</p>
+				<div class="counter" id="asunto-count"><?php echo $max_lengths['asunto']; ?> caracteres restantes</div>
+			</div>
+			<input type="text" name="asunto" placeholder="El Motivo del Asunto" maxlength="<?php echo $max_lengths['email']; ?>" required>
+
+			<div class="input-row">
+				<p class="label-center">Mensaje</p>
+				<div class="counter" id="mensaje-count"><?php echo $max_lengths['asunto']; ?> caracteres restantes</div>
+			</div>
+			<textarea type="text" name="mensaje" placeholder="Tu Mensaje" maxlength="<?php echo $max_lengths['email']; ?>" required></textarea>
+
+        <button type="submit">Enviar Mensaje</button>
+    </form>
+	
+  </div>
+
+  <!-- Footer -->
+  <footer class="row center">
+    <small class="muted2">Copyright - NovaDev 2025 - 2026 | <a href="index.php">Pagina Principal</a> | <a href="contacto.php">Contacto</a></small>
+  </footer>
+  
+
+<script>
+// Función para actualizar contador
+function updateCounter(input, counterId, maxLength) {
+    const counter = document.getElementById(counterId);
+    counter.textContent = (maxLength - input.value.length) + " caracteres restantes";
+}
+
+// Selección de inputs y textarea
+const fields = [
+    {id:'nombre', counter:'nombre-count', max:<?php echo $max_lengths['nombre']; ?>},
+    {id:'email', counter:'email-count', max:<?php echo $max_lengths['email']; ?>},
+    {id:'asunto', counter:'asunto-count', max:<?php echo $max_lengths['asunto']; ?>},
+    {id:'mensaje', counter:'mensaje-count', max:<?php echo $max_lengths['mensaje']; ?>}
+];
+
+// Añadir eventos
+fields.forEach(f => {
+    const el = document.querySelector(`[name="${f.id}"]`);
+    el.addEventListener('input', () => updateCounter(el, f.counter, f.max));
+});
+</script>
+  
+  <script src="js/script.js"></script>
+</body>
+</html>
